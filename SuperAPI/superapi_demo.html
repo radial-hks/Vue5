@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="renderer" content="webkit">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>51WORLD SuperAPI demo</title>
+
+    <link rel="stylesheet" href="http://superapi.51hitech.com/doc-static/css/global.css">
+    <script src="http://superapi.51hitech.com/dist/superAPI.min.js"></script>
+    <style>
+        .btn {
+            position: fixed;
+            right: 20px;
+            top: 20px;
+            color: #fff;
+            background: #0a8;
+            border: none;
+            padding: 8px 10px;
+            line-height: 1;
+            outline: none;
+            font-size: 14px;
+            cursor: pointer;
+            z-index: 100;
+            display: none;
+        }
+
+        .btn:hover {
+            background: #0c8;
+        }
+
+        .btn2 {
+            top: 60px;
+        }
+
+        .btn3 {
+            top: 100px;
+        }
+
+        .btn.show,
+        .btn2.show,
+        .btn3.show {
+            display: inline-block;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="player" style="display:none;"></div>
+    <div class="begin">
+        <button type="button" class="cloud-btn">Start Now</button>
+    </div>
+
+    <div class="btn" onclick="StopRenderCloud()">StopRenderCloud</div>
+    <div class="btn btn2" onclick="addCustomPOI()">AddCustomPOI</div>
+    <div class="btn btn3" onclick="GetCameraInfo()">GetCameraInfo</div>
+
+    <script>
+        "use strict";
+
+        // 初始化
+        var cloudRender = new cloudRenderer('player', 0);
+
+        // 云渲染地址, 渲染口令
+        let cloudurl = "http://172.31.9.235:8889", //云渲染服务地址 (Cloud rendering service address) ①本地IP: http://172.31.9.21:8889, ②域名: https://vizservice.51hitech.com
+            orderID = "D0d5aD7d"; //渲染口令, 在云渲染客户端上获得 (Project ID, obtained on the cloud rendering client)
+
+        function GetUrlStartRenderCloud() {
+            fetch(`${cloudurl}/Renderers/Any/order`, {
+                //方式 ①
+                method: "POST",
+                headers: {
+                    "Content-type": "application/x-www-form-urlencoded"
+                },
+                body: `order=${orderID}&width=${window.innerWidth}&height=${window.innerHeight}`
+                //初始化云渲染固定分辨率输出, 可选, 默认以云渲染客户端设置的分辨率输出
+                // Initialize cloud rendering output at fixed resolution, optional, default output is at the resolution set by the cloud rendering client
+
+                //方式 ②
+                //method: "POST",
+                //headers: { "Content-type": "application/json" },
+                //body: JSON.stringify({order:order, width:window.innerWidth, height:window.innerHeight})
+            }).then(res => res.json()).then(json => {
+                if (json.url) {
+
+                    //启动云渲染 (Start cloud rendering)
+                    cloudRender.SuperAPI("StartRenderCloud", json.url);
+
+                    //事件注册 (Callbakc event registration)
+                    cloudRender.SuperAPI("RegisterCloudResponse", myHandleResponseFunction);
+                }
+            }).catch((error) => {
+                console.error('Error:', error);
+            });
+        }
+
+        const cloudBtn = document.querySelector('.cloud-btn');
+        cloudBtn.addEventListener('click', (event) => {
+            event.preventDefault();
+            cloudBtn.setAttribute('disabled', 'disabled');
+            cloudBtn.textContent = 'Loading ...';
+
+            GetUrlStartRenderCloud();
+        }, true)
+
+        // 事件注册函数 (Event handler function)
+        function myHandleResponseFunction(data) {
+            let jsonObject = JSON.parse(data);
+            switch (jsonObject.func_name) {
+                case 'beginPlay':
+                    document.querySelector('.begin').style = 'display:none;';
+                    break;
+
+                case 'APIAlready':
+                    console.log('APIAlready: 3D世界加载完成');
+                    //云渲染场景加载完成 业务逻辑...
+                    //Do something when 3D world loading is complete
+
+                    document.querySelector('.btn').classList.add('show');
+                    document.querySelector('.btn2').classList.add('show');
+                    document.querySelector('.btn3').classList.add('show');
+                    break;
+
+                case 'OnPOIClick':
+                    console.log('OnPOIClick_id = ' + jsonObject.args.id);
+                    // 返回一个点击POI的ID值
+                    // Do something when return the ID of a clicked POI
+                    break;
+            }
+            return data;
+        }
+
+
+        // 添加自定义POI点
+        // Add a custom POI
+        function addCustomPOI() {
+            let customPOIdata = {
+                "id": "customPOI_ID",
+                "coord_type": "0",
+                "cad_mapkey": "",
+                "coord": "113.319626,23.140392",
+                "coord_z": "0",
+                "coord_z_type": 0,
+                "always_show_label": "true",
+                "show_label_range": "0,8000",
+                "sort_order": "false",
+                "state": "state_1",
+                "marker": {
+                    "size": "100,228",
+                    "images": [{
+                        "define_state": "state_1",
+                        "normal_url": "http://superapi.51hitech.com/doc-static/images/static/markerNormal.png",
+                        "activate_url": "http://superapi.51hitech.com/doc-static/images/static/markerActive.png"
+                    }]
+                },
+                "label": {
+                    "bg_image_url": "http://superapi.51hitech.com/doc-static/images/static/LabelBg.png",
+                    "bg_size": "200,80",
+                    "bg_offset": "50,200",
+                    "content": [{
+                        "text": ["文本内容A", "ff0000ff", "30"],
+                        "text_offset": "10,5"
+                    },
+                    {
+                        "text": ["文本内容B", "00ff00ff", "20"],
+                        "text_offset": "10,45"
+                    }
+                    ]
+                },
+                "window": {
+                    "url": "http://superapi.51hitech.com/doc-static/images/static/echarts-pie.html",
+                    "size": "520,350",
+                    "offset": "50,180"
+                }
+            };
+
+
+            cloudRender.SuperAPI('RemoveAllPOI');
+            cloudRender.SuperAPI('AddCustomPOI', customPOIdata)
+            setTimeout(() => cloudRender.SuperAPI('FocusPOI', { 'id': 'customPOI_ID', 'distance': 1800 }), 5e2);
+        }
+
+        // 获取场景镜头信息
+        // Get the current camera infomation
+        function GetCameraInfo() {
+            let jsonData = {
+                "coord_type": 0,
+                "cad_mapkey": ""
+            }
+            cloudRender.SuperAPI('GetCameraInfo', jsonData, (e) => {
+                let data = JSON.parse(e)
+                console.log(JSON.stringify(data, null, 2));
+            })
+        }
+
+        // 关闭场景
+        // top cloud rendering service
+        function StopRenderCloud() {
+            cloudRender.SuperAPI("StopRenderCloud");
+            setTimeout(() => window.location.reload(), 3e2);
+        }
+    </script>
+
+</body>
+
+</html>
