@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="renderer" content="webkit">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+
     <title>51WORLD SuperAPI demo</title>
 
     <link rel="stylesheet" href="http://superapi.51hitech.com/doc-static/css/global.css">
@@ -37,11 +38,16 @@
         .btn3 {
             top: 100px;
         }
+        .btn4 {
+            top: 140px;
+        }
 
         .btn.show,
         .btn2.show,
-        .btn3.show {
+        .btn3.show,
+        .btn4.show {
             display: inline-block;
+            /* display: ruby; */
         }
     </style>
 </head>
@@ -49,6 +55,7 @@
 <body>
 
     <div id="player" style="display:none;"></div>
+
     <div class="begin">
         <button type="button" class="cloud-btn">Start Now</button>
     </div>
@@ -56,11 +63,12 @@
     <div class="btn" onclick="StopRenderCloud()">StopRenderCloud</div>
     <div class="btn btn2" onclick="addCustomPOI()">AddCustomPOI</div>
     <div class="btn btn3" onclick="GetCameraInfo()">GetCameraInfo</div>
+    <div class="btn btn4" onclick="SetWeather()">SetWeatherWeatherWeather</div>
 
     <script>
         "use strict";
 
-        // 初始化
+        // 初始化【绑定】
         var cloudRender = new cloudRenderer('player', 0);
 
         // 云渲染地址, 渲染口令
@@ -121,6 +129,7 @@
                     document.querySelector('.btn').classList.add('show');
                     document.querySelector('.btn2').classList.add('show');
                     document.querySelector('.btn3').classList.add('show');
+                    document.querySelector('.btn4').classList.add('show');
                     break;
 
                 case 'OnPOIClick':
@@ -131,7 +140,6 @@
             }
             return data;
         }
-
 
         // 添加自定义POI点
         // Add a custom POI
@@ -160,11 +168,11 @@
                     "bg_size": "200,80",
                     "bg_offset": "50,200",
                     "content": [{
-                        "text": ["文本内容A", "ff0000ff", "30"],
+                        "text": ["不是吧？阿sir", "ff0000ff", "30"],
                         "text_offset": "10,5"
                     },
                     {
-                        "text": ["文本内容B", "00ff00ff", "20"],
+                        "text": ["不是吧？阿sir", "00ff00ff", "20"],
                         "text_offset": "10,45"
                     }
                     ]
@@ -200,6 +208,17 @@
         function StopRenderCloud() {
             cloudRender.SuperAPI("StopRenderCloud");
             setTimeout(() => window.location.reload(), 3e2);
+        }
+
+        // 自定调用函数
+        function  SetWeather(){
+            // 创建定义数据， 小雨
+            let jsondata = {
+                "env_weather": "LightRain"
+            }
+            cloudRender.SuperAPI("SetEnvWeather", jsondata, (status) => {
+            console.log(status); //成功、失败回调
+            })
         }
     </script>
 
